@@ -6,6 +6,7 @@
 namespace Magento\Customer\Model\Metadata;
 
 use Magento\Customer\Api\AddressMetadataInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Cached customer address attribute metadata
@@ -21,12 +22,14 @@ class AddressCachedMetadata extends CachedMetadata implements AddressMetadataInt
      * Constructor
      *
      * @param AddressMetadata $metadata
+     * @param StoreManagerInterface $storeManager
      * @param AttributeMetadataCache|null $attributeMetadataCache
      */
     public function __construct(
         AddressMetadata $metadata,
+        StoreManagerInterface $storeManager,
         AttributeMetadataCache $attributeMetadataCache = null
     ) {
-        parent::__construct($metadata, $attributeMetadataCache);
+        parent::__construct($metadata, $storeManager, $attributeMetadataCache);
     }
 }

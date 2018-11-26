@@ -7,6 +7,8 @@ namespace Magento\Customer\Model\Metadata;
 
 use Magento\Customer\Api\MetadataInterface;
 use Magento\Framework\App\ObjectManager;
+use Magento\Eav\Model\Entity\AttributeCache;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Cached attribute metadata service
@@ -31,18 +33,26 @@ class CachedMetadata implements MetadataInterface
     protected $metadata;
 
     /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManager;
+
+    /**
      * Constructor
      *
      * @param MetadataInterface $metadata
+     * @param StoreManagerInterface $storeManager
      * @param AttributeMetadataCache|null $attributeMetadataCache
      */
     public function __construct(
         MetadataInterface $metadata,
+        StoreManagerInterface $storeManager,
         AttributeMetadataCache $attributeMetadataCache = null
     ) {
         $this->metadata = $metadata;
         $this->attributeMetadataCache = $attributeMetadataCache ?: ObjectManager::getInstance()
             ->get(AttributeMetadataCache::class);
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -64,12 +74,13 @@ class CachedMetadata implements MetadataInterface
      */
     public function getAttributeMetadata($attributeCode)
     {
-        $attributesMetadata = $this->attributeMetadataCache->load($this->entityType, $attributeCode);
+        $store = $this->storeManager->getStore()->getCode();
+        $attributesMetadata = $this->attributeMetadataCache->load($this->entityType, $attributeCode . '_' .  $store);
         if (false !== $attributesMetadata) {
             return array_shift($attributesMetadata);
         }
         $attributeMetadata = $this->metadata->getAttributeMetadata($attributeCode);
-        $this->attributeMetadataCache->save($this->entityType, [$attributeMetadata], $attributeCode);
+        $this->attributeMetadataCache->save($this->entityType, [$attributeMetadata], $attributeCode . '_' .  $store);
         return $attributeMetadata;
     }
 
@@ -78,12 +89,13 @@ class CachedMetadata implements MetadataInterface
      */
     public function getAllAttributesMetadata()
     {
-        $attributes = $this->attributeMetadataCache->load($this->entityType, 'all');
+        $store = $this->storeManager->getStore()->getCode();
+        $attributes = $this->attributeMetadataCache->load($this->entityType, 'all_' . $store);
         if ($attributes !== false) {
             return $attributes;
         }
         $attributes = $this->metadata->getAllAttributesMetadata();
-        $this->attributeMetadataCache->save($this->entityType, $attributes, 'all');
+        $this->attributeMetadataCache->save($this->entityType, $attributes, 'all_' . $store);
         return $attributes;
     }
 
@@ -92,12 +104,13 @@ class CachedMetadata implements MetadataInterface
      */
     public function getCustomAttributesMetadata($dataObjectClassName = null)
     {
-        $attributes = $this->attributeMetadataCache->load($this->entityType, 'custom');
+        $store = $this->storeManager->getStore()->getCode();
+        $attributes = $this->attributeMetadataCache->load($this->entityType, 'custom_' . $store);
         if ($attributes !== false) {
             return $attributes;
         }
         $attributes = $this->metadata->getCustomAttributesMetadata();
-        $this->attributeMetadataCache->save($this->entityType, $attributes, 'custom');
+        $this->attributeMetadataCache->save($this->entityType, $attributes, 'custom_' . $store);
         return $attributes;
     }
 }
